@@ -10,7 +10,8 @@ export const ExportPackage = observer(() => {
 
   const canExport = configuratorStore.glbFile && 
                     configuratorStore.sku && 
-                    configuratorStore.customizableAreas.length > 0;
+                    configuratorStore.selectedMeshes.length > 0 &&
+                    configuratorStore.colorOptions.length > 0;
 
   const handleExport = async () => {
     if (!canExport) return;
@@ -20,24 +21,27 @@ export const ExportPackage = observer(() => {
       const zip = new JSZip();
       
       // Compile manifest.json
+      // Create one area per selected mesh for backward compatibility with the viewer
+      const areas = configuratorStore.selectedMeshes.map(meshName => ({
+        meshTargetName: meshName,
+        attributeDisplayName: "Color Change",
+        colors: configuratorStore.colorOptions.map(c => ({
+          name: c.name,
+          hex: c.hex
+        }))
+      }));
+
       const manifest = {
         sku: configuratorStore.sku,
         productName: configuratorStore.productName || configuratorStore.sku,
         modelFilename: configuratorStore.glbFile.name,
-        areas: configuratorStore.customizableAreas.map(area => ({
-          meshTargetName: area.meshTargetName,
-          attributeDisplayName: area.attributeDisplayName,
-          colors: area.colorOptions.map(c => ({
-            name: c.name,
-            hex: c.hex
-          }))
-        }))
+        areas: areas
       };
 
       // Compile CSV
       let csvContent = "Area Name,Attribute Display Name,Color Name,Color Hex\n";
-      configuratorStore.customizableAreas.forEach(area => {
-        area.colorOptions.forEach(c => {
+      areas.forEach(area => {
+        area.colors.forEach(c => {
           csvContent += `"${area.meshTargetName}","${area.attributeDisplayName}","${c.name}","${c.hex}"\n`;
         });
       });
@@ -128,7 +132,7 @@ export const ExportPackage = observer(() => {
           </button>
           {!canExport && (
             <p className="text-xs text-red-500 mt-3 text-center">
-              Requires GLB file, SKU, and at least one mapped area.
+              Requires GLB file, SKU, at least one selected mesh, and color options.
             </p>
           )}
         </div>

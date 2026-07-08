@@ -1,15 +1,60 @@
 import { observer } from "mobx-react-lite";
 import { useStores } from "../stores/rootStore";
 import { Upload } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 
 export const GLBSelector = observer(() => {
   const { configuratorStore } = useStores();
   const fileInputRef = useRef(null);
+  const [isParsing, setIsParsing] = useState(false);
+  const [parseError, setParseError] = useState(null);
+
+  const parseGLB = (file) => {
+    setIsParsing(true);
+    setParseError(null);
+
+    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+    loader.setDRACOLoader(dracoLoader);
+
+    const url = URL.createObjectURL(file);
+
+    loader.load(
+      url,
+      (gltf) => {
+        const meshes = [];
+        gltf.scene.traverse((child) => {
+          if (child.isMesh && child.name) {
+            meshes.push(child.name);
+          }
+        });
+        
+        // Remove duplicates if any
+        const uniqueMeshes = [...new Set(meshes)];
+        configuratorStore.setAvailableMeshes(uniqueMeshes);
+        
+        URL.revokeObjectURL(url);
+        setIsParsing(false);
+      },
+      undefined,
+      (error) => {
+        console.error("Error parsing GLB:", error);
+        setParseError("Failed to parse GLB file. Make sure it's valid.");
+        URL.revokeObjectURL(url);
+        setIsParsing(false);
+      }
+    );
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      configuratorStore.setGlbFile(e.target.files[0]);
+      const file = e.target.files[0];
+      configuratorStore.setGlbFile(file);
+      parseGLB(file);
     }
   };
 
@@ -26,7 +71,9 @@ export const GLBSelector = observer(() => {
   const handleDrop = (e) => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      configuratorStore.setGlbFile(e.dataTransfer.files[0]);
+      const file = e.dataTransfer.files[0];
+      configuratorStore.setGlbFile(file);
+      parseGLB(file);
     }
   };
 
@@ -52,6 +99,9 @@ export const GLBSelector = observer(() => {
             <div>
               <p className="text-sm font-medium text-green-700">File Selected: {configuratorStore.glbFile.name}</p>
               <p className="text-xs text-green-600 mt-1">{(configuratorStore.glbFile.size / 1024 / 1024).toFixed(2)} MB</p>
+              {isParsing && <p className="text-xs text-blue-500 mt-2">Parsing meshes...</p>}
+              {!isParsing && !parseError && <p className="text-xs text-green-600 mt-2">Parsed {configuratorStore.availableMeshes.length} meshes</p>}
+              {parseError && <p className="text-xs text-red-500 mt-2">{parseError}</p>}
             </div>
           ) : (
             <div>
