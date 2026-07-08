@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { useStores } from "../stores/rootStore";
+import { useMainContext } from "../context/MainContextProvider";
 import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import * as THREE from "three";
@@ -7,7 +7,9 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 
 export const GLBSelector = observer(() => {
-  const { configuratorStore } = useStores();
+  const { design3dManager } = useMainContext();
+  const configuratorStore = design3dManager.colorStoreManager;
+
   const fileInputRef = useRef(null);
   const [isParsing, setIsParsing] = useState(false);
   const [parseError, setParseError] = useState(null);

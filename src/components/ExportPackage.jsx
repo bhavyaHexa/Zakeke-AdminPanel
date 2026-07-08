@@ -1,17 +1,20 @@
 import { observer } from "mobx-react-lite";
-import { useStores } from "../stores/rootStore";
+import { useMainContext } from "../context/MainContextProvider";
 import { Download, Package } from "lucide-react";
 import JSZip from "jszip";
 import { useState } from "react";
 
 export const ExportPackage = observer(() => {
-  const { configuratorStore } = useStores();
+  const { designManager, design3dManager } = useMainContext();
+  const colorStore = design3dManager.colorStoreManager;
+  const envStore = design3dManager.environmentStoreManager;
+  
   const [isExporting, setIsExporting] = useState(false);
 
-  const canExport = configuratorStore.glbFile && 
-                    configuratorStore.sku && 
-                    configuratorStore.selectedMeshes.length > 0 &&
-                    configuratorStore.colorOptions.length > 0;
+  const canExport = colorStore.glbFile && 
+                    designManager.sku && 
+                    colorStore.selectedMeshes.length > 0 &&
+                    colorStore.colorOptions.length > 0;
 
   const handleExport = async () => {
     if (!canExport) return;
@@ -21,18 +24,23 @@ export const ExportPackage = observer(() => {
       const zip = new JSZip();
       
       const selectColor = {
-        targetedMeshNames: [...configuratorStore.selectedMeshes],
-        colorOptions: configuratorStore.colorOptions.map(c => ({
+        targetedMeshNames: [...colorStore.selectedMeshes],
+        colorOptions: colorStore.colorOptions.map(c => ({
           name: c.name,
           hex: c.hex
         }))
       };
 
       const manifest = {
-        sku: configuratorStore.sku,
-        productName: configuratorStore.productName || configuratorStore.sku,
-        modelFilename: configuratorStore.glbFile.name,
-        selectColor: selectColor
+        sku: designManager.sku,
+        productName: designManager.productName || designManager.sku,
+        modelFilename: colorStore.glbFile.name,
+        selectColor: selectColor,
+        environment: {
+          envFileName: envStore.envFile ? envStore.envFile.name : "",
+          rotation: { ...envStore.rotation },
+          intensity: envStore.intensity
+        }
       };
 
       // Compile CSV
@@ -56,14 +64,18 @@ export const ExportPackage = observer(() => {
       // Add files to zip
       zip.file("manifest.json", JSON.stringify(manifest, null, 2));
       zip.file("config.csv", csvContent);
-      zip.file(configuratorStore.glbFile.name, configuratorStore.glbFile);
+      zip.file(colorStore.glbFile.name, colorStore.glbFile);
+      
+      if (envStore.envFile) {
+        zip.file(envStore.envFile.name, envStore.envFile);
+      }
 
       // Generate zip blob
       const content = await zip.generateAsync({ type: "blob" });
       
       // Upload to local Flask server instead of downloading
       const formData = new FormData();
-      formData.append("file", content, `${configuratorStore.sku || 'export'}_package.zip`);
+      formData.append("file", content, `${designManager.sku || 'export'}_package.zip`);
       
       const response = await fetch("/upload-to-shopify", {
         method: "POST",
@@ -86,7 +98,7 @@ export const ExportPackage = observer(() => {
 
   return (
     <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 mt-6 mb-10">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">3. Export Package</h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">4. Export Package</h2>
       
       <div className="flex flex-col md:flex-row gap-6 items-center justify-between p-5 bg-gray-50 rounded-lg border border-gray-200">
         <div className="flex-1 space-y-4 w-full">
@@ -94,8 +106,8 @@ export const ExportPackage = observer(() => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Product SKU *</label>
             <input 
               type="text"
-              value={configuratorStore.sku}
-              onChange={(e) => configuratorStore.setSku(e.target.value)}
+              value={designManager.sku}
+              onChange={(e) => designManager.setSku(e.target.value)}
               className="w-full md:w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g., SHOE-123"
             />
@@ -104,8 +116,8 @@ export const ExportPackage = observer(() => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Product Name (Optional)</label>
             <input 
               type="text"
-              value={configuratorStore.productName}
-              onChange={(e) => configuratorStore.setProductName(e.target.value)}
+              value={designManager.productName}
+              onChange={(e) => designManager.setProductName(e.target.value)}
               className="w-full md:w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g., Classic Running Shoe"
             />

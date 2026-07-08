@@ -1,5 +1,6 @@
 import { GLBSelector } from "./components/GLBSelector";
-import { MeshMappingForm } from "./components/MeshMappingForm";
+import { ColorChangeCategory } from "./components/ColorChange/ColorChangeCategory";
+import { EnvironmentCategory } from "./components/EnvironmentChange/EnvironmentCategory";
 import { ExportPackage } from "./components/ExportPackage";
 import "./App.css";
 
@@ -18,7 +19,8 @@ function App() {
         
         <main>
           <GLBSelector />
-          <MeshMappingForm />
+          <ColorChangeCategory />
+          <EnvironmentCategory />
           <ExportPackage />
         </main>
       </div>
