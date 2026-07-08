@@ -20,30 +20,26 @@ export const ExportPackage = observer(() => {
     try {
       const zip = new JSZip();
       
-      // Compile manifest.json
-      // Create one area per selected mesh for backward compatibility with the viewer
-      const areas = configuratorStore.selectedMeshes.map(meshName => ({
-        meshTargetName: meshName,
-        attributeDisplayName: "Color Change",
-        colors: configuratorStore.colorOptions.map(c => ({
+      const selectColor = {
+        targetedMeshNames: [...configuratorStore.selectedMeshes],
+        colorOptions: configuratorStore.colorOptions.map(c => ({
           name: c.name,
           hex: c.hex
         }))
-      }));
+      };
 
       const manifest = {
         sku: configuratorStore.sku,
         productName: configuratorStore.productName || configuratorStore.sku,
         modelFilename: configuratorStore.glbFile.name,
-        areas: areas
+        selectColor: selectColor
       };
 
       // Compile CSV
-      let csvContent = "Area Name,Attribute Display Name,Color Name,Color Hex\n";
-      areas.forEach(area => {
-        area.colors.forEach(c => {
-          csvContent += `"${area.meshTargetName}","${area.attributeDisplayName}","${c.name}","${c.hex}"\n`;
-        });
+      let csvContent = "Targeted Meshes,Color Name,Color Hex\n";
+      const meshList = selectColor.targetedMeshNames.join("; ");
+      selectColor.colorOptions.forEach(c => {
+        csvContent += `"${meshList}","${c.name}","${c.hex}"\n`;
       });
 
       // Trigger download of CSV
