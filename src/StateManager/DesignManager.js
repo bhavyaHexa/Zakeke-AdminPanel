@@ -5,6 +5,8 @@ class DesignManager {
   sku = "";
   productName = "";
 
+  activeProductId = null;
+
   constructor(rootStore) {
     this.rootStore = rootStore;
     makeAutoObservable(this, {
@@ -18,6 +20,16 @@ class DesignManager {
 
   setProductName(name) {
     this.productName = name;
+  }
+
+  setActiveProductId(id) {
+    this.activeProductId = id;
+  }
+
+  reset() {
+    this.sku = "";
+    this.productName = "";
+    this.activeProductId = null;
   }
 }
 

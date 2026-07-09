@@ -1,24 +1,43 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { createNewColorSwatch, removeColorSwatchFromList, updateColorSwatchInList } from "../utils/colorUtils";
+import {
+  createNewColorSwatch,
+  removeColorSwatchFromList,
+  updateColorSwatchInList,
+  createNewTextureSwatch,
+  removeTextureSwatchFromList,
+  updateTextureSwatchInList,
+} from "../utils/colorUtils";
 
+/**
+ * Per-mesh config shape:
+ *   meshConfigs: { [meshName]: { colors: ColorSwatch[], textures: TextureSwatch[] } }
+ *
+ * ColorSwatch:  { id, name, hex }
+ * TextureSwatch: { id, name, url }
+ */
 class ColorStoreManager {
   design3dManager;
-  
+
+  // GLB file state
   glbFile = null;
   glbFileUrl = null;
   glbFileId = null;
   isUploading = false;
   uploadError = null;
+
+  // Mesh state
   availableMeshes = [];
   selectedMeshes = [];
-  colorOptions = [];
+
+  // Per-mesh config: meshName → { colors, textures }
+  meshConfigs = {};
 
   constructor(design3dManager) {
     this.design3dManager = design3dManager;
-    makeAutoObservable(this, {
-      design3dManager: false
-    });
+    makeAutoObservable(this, { design3dManager: false });
   }
+
+  // ── GLB upload ─────────────────────────────────────────────────────────────
 
   setGlbFile(file) {
     this.glbFile = file;
@@ -28,37 +47,29 @@ class ColorStoreManager {
     this.uploadError = null;
     this.availableMeshes = [];
     this.selectedMeshes = [];
-    this.colorOptions = [];
+    this.meshConfigs = {};
   }
 
   async uploadGlbFile(file) {
+    this.setGlbFile(file);
+    this.isUploading = true;
+    this.uploadError = null;
+
     const formData = new FormData();
     formData.append("file", file);
-    console.log("ColorStoreManager: Appended file to FormData:", formData.get("file"));
 
-    runInAction(() => {
-      this.glbFile = file;
-      this.glbFileUrl = null;
-      this.glbFileId = null;
-      this.isUploading = true;
-      this.uploadError = null;
-      this.availableMeshes = [];
-      this.selectedMeshes = [];
-      this.colorOptions = [];
-    });
-    
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://5nvt4h41-3000.inc1.devtunnels.ms';
       const response = await fetch(`${backendUrl}/shopify/upload`, {
         method: "POST",
-        body: formData
+        body: formData,
       });
-      
+
       if (!response.ok) {
         const err = await response.json();
         throw new Error(err.error || err.message || "Failed to upload GLB file");
       }
-      
+
       const data = await response.json();
       const resultData = data.data || data;
       runInAction(() => {
@@ -75,36 +86,171 @@ class ColorStoreManager {
     }
   }
 
+  // ── Mesh selection ─────────────────────────────────────────────────────────
+
   setAvailableMeshes(meshes) {
     this.availableMeshes = meshes;
   }
 
   toggleMeshSelection(meshName) {
     if (this.selectedMeshes.includes(meshName)) {
-      this.selectedMeshes = this.selectedMeshes.filter(m => m !== meshName);
+      this.selectedMeshes = this.selectedMeshes.filter((m) => m !== meshName);
     } else {
       this.selectedMeshes.push(meshName);
+      // Ensure a config entry exists for this mesh
+      if (!this.meshConfigs[meshName]) {
+        this.meshConfigs[meshName] = { colors: [], textures: [] };
+      }
     }
   }
 
   selectAllMeshes() {
     if (this.selectedMeshes.length === this.availableMeshes.length) {
-      this.selectedMeshes = []; // deselect all
+      this.selectedMeshes = [];
     } else {
-      this.selectedMeshes = [...this.availableMeshes]; // select all
+      this.selectedMeshes = [...this.availableMeshes];
+      // Ensure config entries for all meshes
+      this.availableMeshes.forEach((meshName) => {
+        if (!this.meshConfigs[meshName]) {
+          this.meshConfigs[meshName] = { colors: [], textures: [] };
+        }
+      });
     }
   }
 
-  addColorSwatch() {
-    this.colorOptions.push(createNewColorSwatch());
+  // ── Per-mesh config helpers ────────────────────────────────────────────────
+
+  _ensureMeshConfig(meshName) {
+    if (!this.meshConfigs[meshName]) {
+      this.meshConfigs[meshName] = { colors: [], textures: [] };
+    }
   }
 
-  removeColorSwatch(colorId) {
-    this.colorOptions = removeColorSwatchFromList(this.colorOptions, colorId);
+  getMeshConfig(meshName) {
+    this._ensureMeshConfig(meshName);
+    return this.meshConfigs[meshName];
   }
 
-  updateColorSwatch(colorId, field, value) {
-    updateColorSwatchInList(this.colorOptions, colorId, field, value);
+  // ── Colors per mesh ────────────────────────────────────────────────────────
+
+  addColorToMesh(meshName) {
+    this._ensureMeshConfig(meshName);
+    this.meshConfigs[meshName].colors.push(createNewColorSwatch());
+  }
+
+  removeColorFromMesh(meshName, colorId) {
+    this._ensureMeshConfig(meshName);
+    this.meshConfigs[meshName].colors = removeColorSwatchFromList(
+      this.meshConfigs[meshName].colors,
+      colorId
+    );
+  }
+
+  updateColorInMesh(meshName, colorId, field, value) {
+    this._ensureMeshConfig(meshName);
+    updateColorSwatchInList(this.meshConfigs[meshName].colors, colorId, field, value);
+  }
+
+  // ── Textures per mesh ──────────────────────────────────────────────────────
+
+  addTextureToMesh(meshName) {
+    this._ensureMeshConfig(meshName);
+    this.meshConfigs[meshName].textures.push(createNewTextureSwatch());
+  }
+
+  removeTextureFromMesh(meshName, textureId) {
+    this._ensureMeshConfig(meshName);
+    this.meshConfigs[meshName].textures = removeTextureSwatchFromList(
+      this.meshConfigs[meshName].textures,
+      textureId
+    );
+  }
+
+  updateTextureInMesh(meshName, textureId, field, value) {
+    this._ensureMeshConfig(meshName);
+    updateTextureSwatchInList(this.meshConfigs[meshName].textures, textureId, field, value);
+  }
+
+  // ── Serialise to payload ───────────────────────────────────────────────────
+
+  /**
+   * Returns mesh array for payload:
+   * [{ name, colors: [{ name, hexCode }] }]
+   */
+  get meshPayload() {
+    return this.selectedMeshes.map((meshName) => {
+      const cfg = this.meshConfigs[meshName] || { colors: [], textures: [] };
+      return {
+        name: meshName,
+        colors: cfg.colors.map((c) => ({ name: c.name, hexCode: c.hex })),
+      };
+    });
+  }
+
+  /**
+   * Returns textures array for payload:
+   * [{ name, files: [{ name, url }] }]
+   */
+  get texturesPayload() {
+    return this.selectedMeshes
+      .map((meshName) => {
+        const cfg = this.meshConfigs[meshName] || { colors: [], textures: [] };
+        return {
+          name: meshName,
+          files: cfg.textures.map((t) => ({ name: t.name, url: t.url })),
+        };
+      })
+      .filter((entry) => entry.files.length > 0); // omit meshes with no textures
+  }
+
+  // ── Reset ──────────────────────────────────────────────────────────────────
+
+  reset() {
+    this.glbFile = null;
+    this.glbFileUrl = null;
+    this.glbFileId = null;
+    this.isUploading = false;
+    this.uploadError = null;
+    this.availableMeshes = [];
+    this.selectedMeshes = [];
+    this.meshConfigs = {};
+  }
+
+  /**
+   * Hydrate state from a saved product's `data` object (load-back for editing).
+   *  data.mesh     → [{ name, colors: [{ name, hexCode }] }]
+   *  data.textures → [{ name, files: [{ name, url }] }]
+   */
+  loadFromProductData(productData) {
+    const meshArray = productData.mesh || [];
+    const textureArray = productData.textures || [];
+
+    const configs = {};
+
+    meshArray.forEach((meshEntry) => {
+      configs[meshEntry.name] = {
+        colors: (meshEntry.colors || []).map((c) => ({
+          id: `c_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          name: c.name,
+          hex: c.hexCode || "#ffffff",
+        })),
+        textures: [],
+      };
+    });
+
+    textureArray.forEach((texEntry) => {
+      if (!configs[texEntry.name]) {
+        configs[texEntry.name] = { colors: [], textures: [] };
+      }
+      configs[texEntry.name].textures = (texEntry.files || []).map((f) => ({
+        id: `t_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        name: f.name,
+        url: f.url,
+      }));
+    });
+
+    this.meshConfigs = configs;
+    this.selectedMeshes = Object.keys(configs);
   }
 }
 
