@@ -27,24 +27,25 @@ export const ExportPackage = observer(() => {
     setIsExporting(true);
     try {
       const payload = {
-        data: {
-          productName: designManager.productName || designManager.sku,
-          sku: designManager.sku,
-          environments: {
-            file: colorStore.glbFileId || null,
-            intensity: envStore.intensity ?? 1.0,
-            rotation: {
-              x: envStore.rotation?.x ?? 0,
-              y: envStore.rotation?.y ?? 0,
-              z: envStore.rotation?.z ?? 0,
-            },
-          },
-          camera: {
-            position: [0, 90, 0],
-          },
-          mesh: colorStore.meshPayload,
-          textures: colorStore.texturesPayload,
+        productName: designManager.productName || designManager.sku,
+        sku: designManager.sku,
+        modelMediaId: colorStore.glbFileId || null,
+        environment: {
+          lightMode: envStore.envFileUrl || "city",
+          intensity: envStore.intensity ?? 1.0,
+          shadows: true,
+          rotation: {
+            x: envStore.rotation?.x ?? 0,
+            y: envStore.rotation?.y ?? 0,
+            z: envStore.rotation?.z ?? 0,
+          }
         },
+        cameraAngle: {
+          zoomLimit: [0.5, 4],
+          defaultAngle: [0, 90, 0]
+        },
+        mesh: colorStore.meshPayload || [],
+        textures: colorStore.texturesPayload || []
       };
 
       if (isEditing) {

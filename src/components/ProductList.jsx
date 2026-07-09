@@ -32,17 +32,22 @@ export const ProductList = observer(() => {
         designManager.setSku(d.sku || "");
         designManager.setProductName(d.productName || "");
 
-        // Environment
-        if (d.environments) {
-          envStore.setIntensity(d.environments.intensity ?? 1.0);
-          const rot = d.environments.rotation || { x: 0, y: 0, z: 0 };
+        // Environment & Model Media hydration
+        const env = d.environment || d.environments;
+        if (env) {
+          envStore.setIntensity(env.intensity ?? 1.0);
+          const rot = env.rotation || { x: 0, y: 0, z: 0 };
           envStore.setRotation("x", rot.x ?? 0);
           envStore.setRotation("y", rot.y ?? 0);
           envStore.setRotation("z", rot.z ?? 0);
-          // Note: envFileUrl/glbFileUrl are the saved Shopify URLs — not re-uploadable from edit
-          envStore.envFileUrl = d.environments.file || null;
-          colorStore.glbFileUrl = d.environments.file || null;
-          colorStore.glbFileId = d.environments.file || null;
+          envStore.envFileUrl = env.lightMode || env.file || null;
+        }
+
+        // GLB Model URL
+        const glb = d.modelMediaId || (d.environments && d.environments.file) || null;
+        if (glb) {
+          colorStore.glbFileUrl = glb;
+          colorStore.glbFileId = glb;
         }
 
         // Mesh + textures (per-mesh hydration)
