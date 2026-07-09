@@ -3,6 +3,7 @@ import { useMainContext } from "../context/MainContextProvider";
 import { Download, Package } from "lucide-react";
 import { useState } from "react";
 import { runInAction } from "mobx";
+import { createProduct, updateProduct } from "../api/apiClient";
 
 export const ExportPackage = observer(() => {
   const { designManager, design3dManager, productStore } = useMainContext();
@@ -46,23 +47,10 @@ export const ExportPackage = observer(() => {
         },
       };
 
-      const backendUrl =
-        import.meta.env.VITE_BACKEND_URL || "https://5nvt4h41-3000.inc1.devtunnels.ms";
-
-      const endpoint = isEditing
-        ? `${backendUrl}/shopify/products/${designManager.activeProductId}`
-        : `${backendUrl}/shopify/products`;
-      const method = isEditing ? "PUT" : "POST";
-
-      const response = await fetch(endpoint, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || errData.message || "Server responded with an error");
+      if (isEditing) {
+        await updateProduct(designManager.activeProductId, payload);
+      } else {
+        await createProduct(payload);
       }
 
       alert(

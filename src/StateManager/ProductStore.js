@@ -1,4 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx";
+import { fetchProducts, fetchProductById, deleteProduct as apiDeleteProduct } from "../api/apiClient";
 
 /**
  * Manages the product list and all CRUD API interactions:
@@ -22,22 +23,13 @@ class ProductStore {
     makeAutoObservable(this, { rootStore: false });
   }
 
-  get backendUrl() {
-    return import.meta.env.VITE_BACKEND_URL || "https://5nvt4h41-3000.inc1.devtunnels.ms";
-  }
-
   // ── List ────────────────────────────────────────────────────────────────────
 
   async listProducts() {
     this.isLoading = true;
     this.loadError = null;
     try {
-      const res = await fetch(`${this.backendUrl}/shopify/products`);
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to fetch products");
-      }
-      const json = await res.json();
+      const json = await fetchProducts();
       runInAction(() => {
         this.products = json.data?.products ?? json.products ?? (Array.isArray(json) ? json : []);
         this.isLoading = false;
@@ -53,12 +45,7 @@ class ProductStore {
   // ── Get single (for edit hydration) ────────────────────────────────────────
 
   async getProduct(productId) {
-    const res = await fetch(`${this.backendUrl}/shopify/products/${productId}`);
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.message || "Failed to fetch product");
-    }
-    return res.json(); // { id, data: { productName, sku, environments, camera, mesh, textures } }
+    return await fetchProductById(productId); // { id, data: { productName, sku, environments, camera, mesh, textures } }
   }
 
   // ── Delete ──────────────────────────────────────────────────────────────────
@@ -67,13 +54,7 @@ class ProductStore {
     this.deletingId = productId;
     this.deleteError = null;
     try {
-      const res = await fetch(`${this.backendUrl}/shopify/products/${productId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to delete product");
-      }
+      await apiDeleteProduct(productId);
       runInAction(() => {
         this.products = this.products.filter((p) => p.id !== productId);
         this.deletingId = null;

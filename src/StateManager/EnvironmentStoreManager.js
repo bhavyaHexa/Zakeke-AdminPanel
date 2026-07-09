@@ -1,4 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx";
+import { uploadFile } from "../api/apiClient";
 
 class EnvironmentStoreManager {
   design3dManager;
@@ -27,9 +28,7 @@ class EnvironmentStoreManager {
   }
 
   async uploadEnvFile(file) {
-    const formData = new FormData();
-    formData.append("file", file);
-    console.log("EnvironmentStoreManager: Appended file to FormData:", formData.get("file"));
+    console.log("EnvironmentStoreManager: Starting upload via api client...");
 
     runInAction(() => {
       this.envFile = file;
@@ -40,19 +39,8 @@ class EnvironmentStoreManager {
     });
     
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://5nvt4h41-3000.inc1.devtunnels.ms';
-      const response = await fetch(`${backendUrl}/shopify/upload`, {
-        method: "POST",
-        body: formData
-      });
-      
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || err.message || "Failed to upload environment file");
-      }
-      
-      const data = await response.json();
-      const resultData = data.data || data;
+      const response = await uploadFile(file);
+      const resultData = response.data || response;
       runInAction(() => {
         this.envFileUrl = resultData.url;
         this.envFileId = resultData.id;
