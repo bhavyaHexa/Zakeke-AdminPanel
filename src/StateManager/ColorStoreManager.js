@@ -1,10 +1,14 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import { createNewColorSwatch, removeColorSwatchFromList, updateColorSwatchInList } from "../utils/colorUtils";
 
 class ColorStoreManager {
   design3dManager;
   
   glbFile = null;
+  glbFileUrl = null;
+  glbFileId = null;
+  isUploading = false;
+  uploadError = null;
   availableMeshes = [];
   selectedMeshes = [];
   colorOptions = [];
@@ -18,9 +22,47 @@ class ColorStoreManager {
 
   setGlbFile(file) {
     this.glbFile = file;
+    this.glbFileUrl = null;
+    this.glbFileId = null;
+    this.isUploading = false;
+    this.uploadError = null;
     this.availableMeshes = [];
     this.selectedMeshes = [];
     this.colorOptions = [];
+  }
+
+  async uploadGlbFile(file) {
+    this.setGlbFile(file);
+    this.isUploading = true;
+    this.uploadError = null;
+    
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    try {
+      const response = await fetch("/upload-file", {
+        method: "POST",
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to upload GLB file");
+      }
+      
+      const data = await response.json();
+      runInAction(() => {
+        this.glbFileUrl = data.url;
+        this.glbFileId = data.id;
+        this.isUploading = false;
+      });
+    } catch (error) {
+      runInAction(() => {
+        this.uploadError = error.message;
+        this.isUploading = false;
+      });
+      console.error("Failed to upload GLB file:", error);
+    }
   }
 
   setAvailableMeshes(meshes) {

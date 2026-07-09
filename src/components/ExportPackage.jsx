@@ -12,6 +12,9 @@ export const ExportPackage = observer(() => {
   const [isExporting, setIsExporting] = useState(false);
 
   const canExport = colorStore.glbFile && 
+                    colorStore.glbFileUrl &&
+                    !colorStore.isUploading &&
+                    (!envStore.envFile || (envStore.envFileUrl && !envStore.isUploading)) &&
                     designManager.sku && 
                     colorStore.selectedMeshes.length > 0 &&
                     colorStore.colorOptions.length > 0;
@@ -21,26 +24,12 @@ export const ExportPackage = observer(() => {
     
     setIsExporting(true);
     try {
-      const zip = new JSZip();
-      
       const selectColor = {
         targetedMeshNames: [...colorStore.selectedMeshes],
         colorOptions: colorStore.colorOptions.map(c => ({
           name: c.name,
           hex: c.hex
         }))
-      };
-
-      const manifest = {
-        sku: designManager.sku,
-        productName: designManager.productName || designManager.sku,
-        modelFilename: colorStore.glbFile.name,
-        selectColor: selectColor,
-        environment: {
-          envFileName: envStore.envFile ? envStore.envFile.name : "",
-          rotation: { ...envStore.rotation },
-          intensity: envStore.intensity
-        }
       };
 
       // Compile CSV
@@ -55,31 +44,33 @@ export const ExportPackage = observer(() => {
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
-      link.setAttribute("download", `${manifest.sku || 'export'}_config.csv`);
+      link.setAttribute("download", `${designManager.sku || 'export'}_config.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      // Add files to zip
-      zip.file("manifest.json", JSON.stringify(manifest, null, 2));
-      zip.file("config.csv", csvContent);
-      zip.file(colorStore.glbFile.name, colorStore.glbFile);
-      
-      if (envStore.envFile) {
-        zip.file(envStore.envFile.name, envStore.envFile);
-      }
+      // JSON payload for product ingestion
+      const payload = {
+        sku: designManager.sku,
+        productName: designManager.productName || designManager.sku,
+        glbUrl: colorStore.glbFileUrl,
+        glbFileId: colorStore.glbFileId,
+        envUrl: envStore.envFileUrl || "",
+        envFileId: envStore.envFileId || "",
+        selectColor: selectColor,
+        environment: {
+          rotation: { ...envStore.rotation },
+          intensity: envStore.intensity
+        }
+      };
 
-      // Generate zip blob
-      const content = await zip.generateAsync({ type: "blob" });
-      
-      // Upload to local Flask server instead of downloading
-      const formData = new FormData();
-      formData.append("file", content, `${designManager.sku || 'export'}_package.zip`);
-      
       const response = await fetch("/upload-to-shopify", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
@@ -87,7 +78,7 @@ export const ExportPackage = observer(() => {
         throw new Error(errData.error || "Server responded with an error");
       }
       
-      alert("Successfully uploaded 3D model to Shopify!");
+      alert("Successfully configured product on Shopify!");
     } catch (error) {
       console.error("Export failed:", error);
       alert(`Failed to upload to Shopify: ${error.message}`);

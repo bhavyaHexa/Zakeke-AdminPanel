@@ -55,7 +55,7 @@ export const GLBSelector = observer(() => {
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      configuratorStore.setGlbFile(file);
+      configuratorStore.uploadGlbFile(file);
       parseGLB(file);
     }
   };
@@ -74,7 +74,7 @@ export const GLBSelector = observer(() => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
-      configuratorStore.setGlbFile(file);
+      configuratorStore.uploadGlbFile(file);
       parseGLB(file);
     }
   };
@@ -101,6 +101,17 @@ export const GLBSelector = observer(() => {
             <div>
               <p className="text-sm font-medium text-green-700">File Selected: {configuratorStore.glbFile.name}</p>
               <p className="text-xs text-green-600 mt-1">{(configuratorStore.glbFile.size / 1024 / 1024).toFixed(2)} MB</p>
+              
+              {configuratorStore.isUploading && (
+                <p className="text-xs text-blue-500 mt-2 animate-pulse font-medium">Uploading to Shopify Files...</p>
+              )}
+              {!configuratorStore.isUploading && configuratorStore.glbFileUrl && (
+                <p className="text-xs text-green-600 mt-2 font-semibold">✓ Uploaded to Shopify Files</p>
+              )}
+              {configuratorStore.uploadError && (
+                <p className="text-xs text-red-500 mt-2 font-medium">Upload Error: {configuratorStore.uploadError}</p>
+              )}
+              
               {isParsing && <p className="text-xs text-blue-500 mt-2">Parsing meshes...</p>}
               {!isParsing && !parseError && <p className="text-xs text-green-600 mt-2">Parsed {configuratorStore.availableMeshes.length} meshes</p>}
               {parseError && <p className="text-xs text-red-500 mt-2">{parseError}</p>}

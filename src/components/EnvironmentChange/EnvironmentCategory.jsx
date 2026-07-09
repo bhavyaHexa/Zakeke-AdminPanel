@@ -10,7 +10,7 @@ export const EnvironmentCategory = observer(() => {
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      envStore.setEnvFile(e.target.files[0]);
+      envStore.uploadEnvFile(e.target.files[0]);
     }
   };
 
@@ -49,6 +49,16 @@ export const EnvironmentCategory = observer(() => {
                     <ImageIcon className="w-8 h-8 text-green-500" />
                     <p className="text-sm font-medium text-green-700">{envStore.envFile.name}</p>
                     <p className="text-xs text-green-600">{(envStore.envFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    
+                    {envStore.isUploading && (
+                      <p className="text-xs text-blue-500 mt-1 animate-pulse font-medium">Uploading to Shopify Files...</p>
+                    )}
+                    {!envStore.isUploading && envStore.envFileUrl && (
+                      <p className="text-xs text-green-600 mt-1 font-semibold">✓ Uploaded to Shopify Files</p>
+                    )}
+                    {envStore.uploadError && (
+                      <p className="text-xs text-red-500 mt-1 font-medium">Upload Error: {envStore.uploadError}</p>
+                    )}
                   </>
                 ) : (
                   <>
