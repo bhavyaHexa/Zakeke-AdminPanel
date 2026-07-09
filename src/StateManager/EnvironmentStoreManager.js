@@ -27,12 +27,17 @@ class EnvironmentStoreManager {
   }
 
   async uploadEnvFile(file) {
-    this.setEnvFile(file);
-    this.isUploading = true;
-    this.uploadError = null;
-    
     const formData = new FormData();
     formData.append("file", file);
+    console.log("EnvironmentStoreManager: Appended file to FormData:", formData.get("file"));
+
+    runInAction(() => {
+      this.envFile = file;
+      this.envFileUrl = null;
+      this.envFileId = null;
+      this.isUploading = true;
+      this.uploadError = null;
+    });
     
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://5nvt4h41-3000.inc1.devtunnels.ms';

@@ -60,17 +60,7 @@ export const GLBPreview = observer(() => {
 
       {/* Main Preview Frame */}
       <div className="relative w-full bg-gray-100 h-[350px] md:h-[400px]">
-        {/* Modularized Scene Container */}
-        <SceneContainer
-          glbFile={glbFile}
-          blobUrl={blobUrl}
-          configuratorStore={configuratorStore}
-          setIsLoading={setIsLoading}
-          setErrorMsg={setErrorMsg}
-          setHoveredMesh={setHoveredMesh}
-          onFitCameraRef={fitCameraRef}
-        />
-
+       
         {/* Loading overlay */}
         {isLoading && (
           <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center space-y-3 z-10">

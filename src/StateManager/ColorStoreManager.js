@@ -32,12 +32,20 @@ class ColorStoreManager {
   }
 
   async uploadGlbFile(file) {
-    this.setGlbFile(file);
-    this.isUploading = true;
-    this.uploadError = null;
-    
     const formData = new FormData();
     formData.append("file", file);
+    console.log("ColorStoreManager: Appended file to FormData:", formData.get("file"));
+
+    runInAction(() => {
+      this.glbFile = file;
+      this.glbFileUrl = null;
+      this.glbFileId = null;
+      this.isUploading = true;
+      this.uploadError = null;
+      this.availableMeshes = [];
+      this.selectedMeshes = [];
+      this.colorOptions = [];
+    });
     
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://5nvt4h41-3000.inc1.devtunnels.ms';
