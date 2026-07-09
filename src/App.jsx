@@ -10,7 +10,7 @@ function App() {
       <div className="max-w-4xl mx-auto">
         <header className="mb-8 text-center">
           <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl">
-            Zakeke 3D Ingestion Tool
+          Hexacoder 3D Ingestion Tool
           </h1>
           <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
             Configure your 3D model, map materials, and generate Zakeke payloads.

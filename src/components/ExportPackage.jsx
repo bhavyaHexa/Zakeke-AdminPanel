@@ -52,20 +52,25 @@ export const ExportPackage = observer(() => {
 
       // JSON payload for product ingestion
       const payload = {
-        sku: designManager.sku,
         productName: designManager.productName || designManager.sku,
-        glbUrl: colorStore.glbFileUrl,
-        glbFileId: colorStore.glbFileId,
-        envUrl: envStore.envFileUrl || "",
-        envFileId: envStore.envFileId || "",
-        selectColor: selectColor,
+        sku: designManager.sku,
+        modelMediaId: colorStore.glbFileId,
         environment: {
-          rotation: { ...envStore.rotation },
-          intensity: envStore.intensity
+          lightMode: envStore.envFileUrl || "city",
+          intensity: envStore.intensity ?? 1.0,
+          shadows: true
+        },
+        cameraAngle: {
+          zoomLimit: [0.5, 4],
+          defaultAngle: [0, 90, 0]
+        },
+        mesh: {
+          visibleMeshes: colorStore.selectedMeshes.length > 0 ? colorStore.selectedMeshes : colorStore.availableMeshes
         }
       };
 
-      const response = await fetch("/upload-to-shopify", {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://5nvt4h41-3000.inc1.devtunnels.ms';
+      const response = await fetch(`${backendUrl}/shopify/products`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -75,7 +80,7 @@ export const ExportPackage = observer(() => {
 
       if (!response.ok) {
         const errData = await response.json();
-        throw new Error(errData.error || "Server responded with an error");
+        throw new Error(errData.error || errData.message || "Server responded with an error");
       }
       
       alert("Successfully configured product on Shopify!");
