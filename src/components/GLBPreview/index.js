@@ -1,0 +1,1 @@
+export { GLBPreview } from "./GLBPreview";

@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
+import { GLBPreview } from "./GLBPreview/GLBPreview";
 
 export const GLBSelector = observer(() => {
   const { design3dManager } = useMainContext();
@@ -124,6 +125,7 @@ export const GLBSelector = observer(() => {
           )}
         </div>
       </div>
+      <GLBPreview />
     </div>
   );
 });
