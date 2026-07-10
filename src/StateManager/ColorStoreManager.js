@@ -168,7 +168,7 @@ class ColorStoreManager {
 
   /**
    * Returns mesh array for payload:
-   * [{ name, colors: [{ name, hexCode }] }]
+   * [{ name, colors: [{ name, hexCode }], textures: [{ name, url }] }]
    */
   get meshPayload() {
     return this.selectedMeshes.map((meshName) => {
@@ -176,24 +176,9 @@ class ColorStoreManager {
       return {
         name: meshName,
         colors: cfg.colors.map((c) => ({ name: c.name, hexCode: c.hex })),
+        textures: cfg.textures.map((t) => ({ name: t.name, url: t.url })),
       };
     });
-  }
-
-  /**
-   * Returns textures array for payload:
-   * [{ name, files: [{ name, url }] }]
-   */
-  get texturesPayload() {
-    return this.selectedMeshes
-      .map((meshName) => {
-        const cfg = this.meshConfigs[meshName] || { colors: [], textures: [] };
-        return {
-          name: meshName,
-          files: cfg.textures.map((t) => ({ name: t.name, url: t.url })),
-        };
-      })
-      .filter((entry) => entry.files.length > 0); // omit meshes with no textures
   }
 
   // ── Reset ──────────────────────────────────────────────────────────────────
@@ -211,8 +196,8 @@ class ColorStoreManager {
 
   /**
    * Hydrate state from a saved product's `data` object (load-back for editing).
-   *  data.mesh     → [{ name, colors: [{ name, hexCode }] }]
-   *  data.textures → [{ name, files: [{ name, url }] }]
+   *  data.mesh     → [{ name, colors: [{ name, hexCode }], textures: [{ name, url }] }]
+   *  data.textures → [{ name, files: [{ name, url }] }] (legacy fallback)
    */
   loadFromProductData(productData) {
     const meshArray = productData.mesh || [];
@@ -227,19 +212,27 @@ class ColorStoreManager {
           name: c.name,
           hex: c.hexCode || "#ffffff",
         })),
-        textures: [],
+        textures: (meshEntry.textures || []).map((t) => ({
+          id: `t_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          name: t.name,
+          url: t.url,
+        })),
       };
     });
 
+    // Legacy fallback for textures stored at the top level
     textureArray.forEach((texEntry) => {
       if (!configs[texEntry.name]) {
         configs[texEntry.name] = { colors: [], textures: [] };
       }
-      configs[texEntry.name].textures = (texEntry.files || []).map((f) => ({
-        id: `t_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-        name: f.name,
-        url: f.url,
-      }));
+      // Only populate if nested textures are empty to avoid overriding newer data
+      if (configs[texEntry.name].textures.length === 0) {
+        configs[texEntry.name].textures = (texEntry.files || []).map((f) => ({
+          id: `t_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          name: f.name,
+          url: f.url,
+        }));
+      }
     });
 
     this.meshConfigs = configs;

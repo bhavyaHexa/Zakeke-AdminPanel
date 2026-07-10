@@ -41,8 +41,7 @@ export const ExportPackage = observer(() => {
             }
           },
           camera: colorStore.cameraConfig || null,
-          mesh: colorStore.meshPayload || [],
-          textures: colorStore.texturesPayload || []
+          mesh: colorStore.meshPayload || []
         }
       };
 
