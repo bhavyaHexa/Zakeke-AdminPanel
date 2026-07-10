@@ -32,6 +32,7 @@ class ColorStoreManager {
 
   // Per-mesh config: meshName → { colors, textures }
   meshConfigs = {};
+  cameraConfig = null;
 
   constructor(design3dManager) {
     this.design3dManager = design3dManager;
@@ -49,6 +50,11 @@ class ColorStoreManager {
     this.availableMeshes = [];
     this.selectedMeshes = [];
     this.meshConfigs = {};
+    this.cameraConfig = null;
+  }
+
+  setCameraConfig(config) {
+    this.cameraConfig = config;
   }
 
   async uploadGlbFile(file) {

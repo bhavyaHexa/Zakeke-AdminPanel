@@ -47,7 +47,7 @@ export const SceneContainer = ({
               setErrorMsg={setErrorMsg}
             />
           ) : null}
-          <DynamicPreviewCamera onFitCameraRef={onFitCameraRef} blobUrl={blobUrl} />
+          <DynamicPreviewCamera onFitCameraRef={onFitCameraRef} blobUrl={blobUrl} configuratorStore={configuratorStore} />
         </Suspense>
       </Canvas>
     </div>

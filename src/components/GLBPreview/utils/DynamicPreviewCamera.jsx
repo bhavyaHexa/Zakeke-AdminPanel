@@ -2,7 +2,7 @@ import { useThree } from "@react-three/fiber";
 import { useEffect } from "react";
 import * as THREE from "three";
 
-export const DynamicPreviewCamera = ({ onFitCameraRef, blobUrl }) => {
+export const DynamicPreviewCamera = ({ onFitCameraRef, blobUrl, configuratorStore }) => {
   const { camera, controls, scene } = useThree();
 
   const fit = (enableTransition = false) => {
@@ -39,6 +39,25 @@ export const DynamicPreviewCamera = ({ onFitCameraRef, blobUrl }) => {
       paddingRight: 0.15,
       paddingTop: 0.15,
       paddingBottom: 0.15
+    });
+
+    const cameraConfig = {
+      position: camera.position.clone().toArray(),
+      target: controls.getTarget(new THREE.Vector3()).toArray(),
+      fov: camera.fov,
+      near: camera.near,
+      far: camera.far,
+      minDistance: controls.minDistance,
+      maxDistance: controls.maxDistance
+    };
+
+    if (configuratorStore && configuratorStore.setCameraConfig) {
+      configuratorStore.setCameraConfig(cameraConfig);
+    }
+
+    console.log("DynamicPreviewCamera: Fitted Camera Values:", {
+      ...cameraConfig,
+      maxDim
     });
   };
 
