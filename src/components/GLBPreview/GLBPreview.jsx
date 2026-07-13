@@ -8,6 +8,7 @@ export const GLBPreview = observer(() => {
   const { design3dManager } = useMainContext();
   const configuratorStore = design3dManager.colorStoreManager;
   const glbFile = configuratorStore.glbFile;
+  const glbFileUrl = configuratorStore.glbFileUrl;
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -15,20 +16,20 @@ export const GLBPreview = observer(() => {
   const [blobUrl, setBlobUrl] = useState("");
   const fitCameraRef = useRef(null);
 
-  // Manage stable blob URL
+  // Manage stable blob or remote URL
   useEffect(() => {
-    if (!glbFile) {
+    if (glbFile) {
+      const url = URL.createObjectURL(glbFile);
+      setBlobUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else if (glbFileUrl) {
+      setBlobUrl(glbFileUrl);
+    } else {
       setBlobUrl("");
-      return;
     }
-    
-    const url = URL.createObjectURL(glbFile);
-    setBlobUrl(url);
-    
-    return () => {
-      URL.revokeObjectURL(url);
-    };
-  }, [glbFile]);
+  }, [glbFile, glbFileUrl]);
 
   const handleResetCamera = () => {
     if (fitCameraRef.current) {
@@ -36,7 +37,7 @@ export const GLBPreview = observer(() => {
     }
   };
 
-  if (!glbFile || !blobUrl) return null;
+  if (!blobUrl) return null;
 
   return (
     <div className="mt-6 border border-gray-100 bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">

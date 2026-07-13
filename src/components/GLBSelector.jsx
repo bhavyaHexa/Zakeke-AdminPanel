@@ -84,7 +84,7 @@ export const GLBSelector = observer(() => {
     <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
       <h2 className="text-xl font-semibold mb-4 text-gray-800">1. Select 3D Model</h2>
       <div 
-        className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors ${configuratorStore.glbFile ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'}`}
+        className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors ${configuratorStore.glbFile || configuratorStore.glbFileUrl ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'}`}
         onClick={handleClick}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -97,11 +97,15 @@ export const GLBSelector = observer(() => {
           onChange={handleFileChange}
         />
         <div className="flex flex-col items-center justify-center space-y-3">
-          <Upload className={`w-10 h-10 ${configuratorStore.glbFile ? 'text-green-500' : 'text-gray-400'}`} />
-          {configuratorStore.glbFile ? (
+          <Upload className={`w-10 h-10 ${configuratorStore.glbFile || configuratorStore.glbFileUrl ? 'text-green-500' : 'text-gray-400'}`} />
+          {configuratorStore.glbFile || configuratorStore.glbFileUrl ? (
             <div>
-              <p className="text-sm font-medium text-green-700">File Selected: {configuratorStore.glbFile.name}</p>
-              <p className="text-xs text-green-600 mt-1">{(configuratorStore.glbFile.size / 1024 / 1024).toFixed(2)} MB</p>
+              <p className="text-sm font-medium text-green-700">
+                File: {configuratorStore.glbFile ? configuratorStore.glbFile.name : (configuratorStore.glbFileUrl.split('/').pop() || "Loaded Model")}
+              </p>
+              {configuratorStore.glbFile && (
+                <p className="text-xs text-green-600 mt-1">{(configuratorStore.glbFile.size / 1024 / 1024).toFixed(2)} MB</p>
+              )}
               
               {configuratorStore.isUploading && (
                 <p className="text-xs text-blue-500 mt-2 animate-pulse font-medium">Uploading to Shopify Files...</p>

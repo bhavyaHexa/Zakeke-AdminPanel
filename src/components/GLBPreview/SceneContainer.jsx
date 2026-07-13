@@ -16,12 +16,12 @@ export const SceneContainer = ({
 }) => {
   // Set initial loading state when file changes
   useEffect(() => {
-    if (glbFile) {
+    if (blobUrl) {
       setIsLoading(true);
       setErrorMsg(null);
       setHoveredMesh("");
     }
-  }, [glbFile, setIsLoading, setErrorMsg, setHoveredMesh]);
+  }, [blobUrl, setIsLoading, setErrorMsg, setHoveredMesh]);
 
   return (
     <div className="w-full h-[350px] md:h-[400px]">

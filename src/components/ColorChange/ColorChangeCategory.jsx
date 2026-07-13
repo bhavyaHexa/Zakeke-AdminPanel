@@ -50,7 +50,7 @@ export const ColorChangeCategory = observer(() => {
         2. Map Customizable Areas
       </h2>
 
-      {!store.glbFile ? (
+      {!store.glbFile && !store.glbFileUrl ? (
         <p className="text-gray-500 text-sm italic p-4 bg-gray-50 rounded-lg text-center border border-dashed border-gray-200">
           Upload a 3D model first to see available meshes.
         </p>

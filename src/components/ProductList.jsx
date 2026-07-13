@@ -41,6 +41,7 @@ export const ProductList = observer(() => {
           envStore.setRotation("y", rot.y ?? 0);
           envStore.setRotation("z", rot.z ?? 0);
           envStore.envFileUrl = env.lightMode || env.file || null;
+          envStore.envFileId = env.lightMode || env.file || null;
         }
 
         // GLB Model URL

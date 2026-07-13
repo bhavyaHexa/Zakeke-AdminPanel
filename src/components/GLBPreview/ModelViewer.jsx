@@ -23,6 +23,22 @@ export const ModelViewer = observer(({
     }
   }, [scene, setIsLoading]);
 
+  // Parse all available meshes from the loaded 3D scene
+  useEffect(() => {
+    if (scene) {
+      const meshes = [];
+      scene.traverse((child) => {
+        if (child.isMesh && child.name) {
+          meshes.push(child.name);
+        }
+      });
+      const uniqueMeshes = [...new Set(meshes)];
+      if (uniqueMeshes.length > 0) {
+        configuratorStore.setAvailableMeshes(uniqueMeshes);
+      }
+    }
+  }, [scene, configuratorStore]);
+
   // Clone scene to prevent mutating the shared cache
   const clonedScene = useMemo(() => {
     if (!scene) return null;

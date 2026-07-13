@@ -34,7 +34,7 @@ export const EnvironmentCategory = observer(() => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">HDRI Environment Map (.hdr / .exr / .env)</label>
             <div 
-              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${envStore.envFile ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-blue-400 hover:bg-white'}`}
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${envStore.envFile || envStore.envFileUrl ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-blue-400 hover:bg-white'}`}
               onClick={() => fileInputRef.current?.click()}
             >
               <input 
@@ -44,11 +44,15 @@ export const EnvironmentCategory = observer(() => {
                 onChange={handleFileChange}
               />
               <div className="flex flex-col items-center justify-center space-y-2">
-                {envStore.envFile ? (
+                {envStore.envFile || envStore.envFileUrl ? (
                   <>
                     <ImageIcon className="w-8 h-8 text-green-500" />
-                    <p className="text-sm font-medium text-green-700">{envStore.envFile.name}</p>
-                    <p className="text-xs text-green-600">{(envStore.envFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p className="text-sm font-medium text-green-700">
+                      {envStore.envFile ? envStore.envFile.name : (envStore.envFileUrl.split('/').pop() || "Loaded Environment Map")}
+                    </p>
+                    {envStore.envFile && (
+                      <p className="text-xs text-green-600">{(envStore.envFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    )}
                     
                     {envStore.isUploading && (
                       <p className="text-xs text-blue-500 mt-1 animate-pulse font-medium">Uploading to Shopify Files...</p>
