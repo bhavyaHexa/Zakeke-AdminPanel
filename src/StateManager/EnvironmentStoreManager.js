@@ -27,6 +27,16 @@ class EnvironmentStoreManager {
     this.uploadError = null;
   }
 
+  reset() {
+    this.envFile = null;
+    this.envFileUrl = null;
+    this.envFileId = null;
+    this.isUploading = false;
+    this.uploadError = null;
+    this.rotation = { x: 0, y: 0, z: 0 };
+    this.intensity = 1.0;
+  }
+
   async uploadEnvFile(file) {
     console.log("EnvironmentStoreManager: Starting upload via api client...");
 

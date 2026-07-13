@@ -51,6 +51,9 @@ class ColorStoreManager {
     this.selectedMeshes = [];
     this.meshConfigs = {};
     this.cameraConfig = null;
+    if (this.design3dManager?.environmentStoreManager) {
+      this.design3dManager.environmentStoreManager.reset();
+    }
   }
 
   setCameraConfig(config) {
