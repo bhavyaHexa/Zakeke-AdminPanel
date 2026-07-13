@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from "react";
 import { useGLTF } from "@react-three/drei";
 import { observer } from "mobx-react-lite";
+import { runInAction } from "mobx";
 import * as THREE from "three";
 
 export const ModelViewer = observer(({
@@ -66,58 +67,103 @@ export const ModelViewer = observer(({
     return mats;
   }, [clonedScene]);
 
-  // Apply visual highlights based on MobX selectedMeshes state
+  // Serialize config values to force react hook re-trigger when configs change
+  const configTrigger = JSON.stringify(
+    configuratorStore.availableMeshes.map(mesh => {
+      const cfg = configuratorStore.getMeshConfig(mesh);
+      return {
+        mesh,
+        hex: cfg?.colors?.[0]?.hex,
+        url: cfg?.textures?.[0]?.url
+      };
+    })
+  );
+
+  // Apply visual colors, textures, and active highlights based on store state
   useEffect(() => {
     if (!clonedScene) return;
-    const selected = [...configuratorStore.selectedMeshes];
 
     clonedScene.traverse((child) => {
       if (child.isMesh && child.name) {
         const origMat = originalMaterials.get(child.name);
-        if (selected.includes(child.name)) {
-          // Highlight material
-          if (!child.userData.highlightMaterial) {
-            child.userData.highlightMaterial = new THREE.MeshStandardMaterial({
-              color: 0x3b82f6, // Blue select tint
-              roughness: 0.4,
-              metalness: 0.1,
-              transparent: true,
-              opacity: 0.8,
-              emissive: 0x1d4ed8,
-              emissiveIntensity: 0.15,
-              depthWrite: true,
-            });
-          }
-          child.material = child.userData.highlightMaterial;
+        if (!origMat) return;
+
+        // Get config from store
+        const cfg = configuratorStore.getMeshConfig(child.name);
+        const hex = cfg?.colors?.[0]?.hex;
+        const textureUrl = cfg?.textures?.[0]?.url;
+
+        // Clone material to apply custom changes dynamically
+        let targetMat = child.userData.customMaterial;
+        if (!targetMat) {
+          targetMat = origMat.clone();
+          child.userData.customMaterial = targetMat;
+        }
+
+        // Apply hex color
+        if (hex) {
+          targetMat.color.set(hex);
         } else {
-          // Restore original
-          child.material = origMat;
+          targetMat.color.copy(origMat.color);
+        }
+
+        // Apply texture map
+        if (textureUrl) {
+          // Load texture map dynamically
+          const textureLoader = new THREE.TextureLoader();
+          textureLoader.load(textureUrl, (tex) => {
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            targetMat.map = tex;
+            targetMat.needsUpdate = true;
+          });
+        } else {
+          targetMat.map = origMat.map;
+        }
+
+        // Highlight active mesh using a vibrant red color
+        if (child.name === configuratorStore.activeMesh) {
+          let activeHighlightMat = child.userData.activeHighlightMat;
+          if (!activeHighlightMat) {
+            activeHighlightMat = targetMat.clone();
+            activeHighlightMat.color.set(0xdc2626); // Red color
+            activeHighlightMat.emissive.set(0xef4444); // Glowing red
+            activeHighlightMat.emissiveIntensity = 0.8;
+            child.userData.activeHighlightMat = activeHighlightMat;
+          } else {
+            activeHighlightMat.color.set(0xdc2626);
+            activeHighlightMat.emissive.set(0xef4444);
+            activeHighlightMat.emissiveIntensity = 0.8;
+          }
+          child.material = activeHighlightMat;
+        } else {
+          // Clear active emissive overlay
+          targetMat.emissive.set(0x000000);
+          targetMat.emissiveIntensity = 0;
+          child.material = targetMat;
         }
       }
     });
-  }, [clonedScene, configuratorStore.selectedMeshes, originalMaterials]);
+  }, [clonedScene, configuratorStore.activeMesh, configTrigger, originalMaterials]);
 
   if (!clonedScene) return null;
 
   return (
-    <primitive
-      object={clonedScene}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        if (e.object.isMesh && e.object.name) {
-          setHoveredMesh(e.object.name);
-        }
-      }}
-      onPointerOut={(e) => {
-        e.stopPropagation();
-        setHoveredMesh("");
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (e.object.isMesh && e.object.name) {
-          configuratorStore.toggleMeshSelection(e.object.name);
-        }
-      }}
-    />
+    <>
+      <primitive
+        object={clonedScene}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          if (e.object.isMesh && e.object.name) {
+            setHoveredMesh(e.object.name);
+          }
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation();
+          setHoveredMesh("");
+        }}
+      />
+    </>
   );
 });

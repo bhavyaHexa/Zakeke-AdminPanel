@@ -81,7 +81,7 @@ export const EnvironmentCategory = observer(() => {
               <div className="flex items-center space-x-3">
                 <input 
                   type="range" 
-                  min="0" max="5" step="0.1" 
+                  min="0" max="3" step="0.1" 
                   value={envStore.intensity}
                   onChange={(e) => handleIntensityChange(e.target.value)}
                   className="flex-1"

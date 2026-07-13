@@ -30,9 +30,29 @@ class ProductStore {
     this.loadError = null;
     try {
       const json = await fetchProducts();
+      const productsList = json.data?.products ?? json.products ?? (Array.isArray(json) ? json : []);
+      
       runInAction(() => {
-        this.products = json.data?.products ?? json.products ?? (Array.isArray(json) ? json : []);
+        this.products = productsList.map((p) => ({ ...p, sku: p.sku || "" }));
         this.isLoading = false;
+      });
+
+      // Fetch details in background to resolve SKU on the frontend
+      productsList.forEach(async (product) => {
+        try {
+          const detail = await this.getProduct(product.id);
+          const d = detail.data?.data || detail.data || detail;
+          if (d && d.sku) {
+            runInAction(() => {
+              const target = this.products.find((p) => p.id === product.id);
+              if (target) {
+                target.sku = d.sku;
+              }
+            });
+          }
+        } catch (err) {
+          console.error(`Failed to resolve SKU for product ${product.id}:`, err);
+        }
       });
     } catch (e) {
       runInAction(() => {

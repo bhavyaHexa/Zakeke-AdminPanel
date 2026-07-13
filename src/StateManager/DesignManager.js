@@ -6,6 +6,7 @@ class DesignManager {
   productName = "";
 
   activeProductId = null;
+  isConfiguring = false;
 
   constructor(rootStore) {
     this.rootStore = rootStore;
@@ -26,10 +27,15 @@ class DesignManager {
     this.activeProductId = id;
   }
 
+  setIsConfiguring(val) {
+    this.isConfiguring = val;
+  }
+
   reset() {
     this.sku = "";
     this.productName = "";
     this.activeProductId = null;
+    this.isConfiguring = false;
   }
 }
 

@@ -1,84 +1,115 @@
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { runInAction } from "mobx";
 import { useMainContext } from "../../context/MainContextProvider";
-import { MeshChecklist } from "./MeshChecklist";
-import { ColorOptionsList } from "./ColorOptionsList";
-import { TextureOptionsList } from "./TextureOptionsList";
-
-/**
- * Accordion card for one selected mesh — shows its colors + textures inline.
- */
-const MeshConfigPanel = observer(({ meshName }) => {
-  const [open, setOpen] = useState(true);
-
-  return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      {/* Header */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-      >
-        <span className="text-sm font-semibold text-gray-700 truncate" title={meshName}>
-          {meshName}
-        </span>
-        {open ? (
-          <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
-        )}
-      </button>
-
-      {/* Body */}
-      {open && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white">
-          <ColorOptionsList meshName={meshName} />
-          <TextureOptionsList meshName={meshName} />
-        </div>
-      )}
-    </div>
-  );
-});
+import { MaterialTabs } from "./MaterialTabs";
+import { MeshList } from "./MeshList";
+import { MaterialEditor } from "./MaterialEditor";
 
 export const ColorChangeCategory = observer(() => {
-  const { design3dManager } = useMainContext();
+  const { design3dManager, designManager } = useMainContext();
   const store = design3dManager.colorStoreManager;
 
+  const [activeTab, setActiveTab] = useState("Product MetaData");
+  const activeMesh = store.activeMesh;
+  const setActiveMesh = (meshName) => store.setActiveMesh(meshName);
+
+  const hasModel = store.glbFile || store.glbFileUrl;
+
+  const handleOpenMeshDetail = (meshName) => {
+    runInAction(() => {
+      if (!store.selectedMeshes.includes(meshName)) {
+        store.selectedMeshes.push(meshName);
+      }
+      if (!store.meshConfigs[meshName]) {
+        store.meshConfigs[meshName] = { colors: [], textures: [] };
+      }
+    });
+    setActiveMesh(meshName);
+  };
+
   return (
-    <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 mt-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6">
-        2. Map Customizable Areas
-      </h2>
+    <div className="flex flex-col bg-white">
+      {/* Reusable Material Tabs Component */}
+      <MaterialTabs
+        tabs={["Product MetaData", "Model Materials", "Design Materials"]}
+        activeTab={activeTab}
+        onTabSelect={(tab) => {
+          setActiveTab(tab);
+          // Auto-clear active mesh detail if changing tabs
+          setActiveMesh(null);
+        }}
+      />
 
-      {!store.glbFile && !store.glbFileUrl ? (
-        <p className="text-gray-500 text-sm italic p-4 bg-gray-50 rounded-lg text-center border border-dashed border-gray-200">
-          Upload a 3D model first to see available meshes.
-        </p>
-      ) : (
-        <div className="space-y-6">
-          {/* Mesh selector */}
-          <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Select Meshes</h3>
-            <MeshChecklist />
-          </div>
-
-          {/* Per-mesh config panels */}
-          {store.selectedMeshes.length === 0 ? (
-            <p className="text-xs text-gray-400 italic text-center py-4">
-              Select at least one mesh above to configure its colors and textures.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700">
-                Configure per mesh
-              </h3>
-              {store.selectedMeshes.map((meshName) => (
-                <MeshConfigPanel key={meshName} meshName={meshName} />
-              ))}
+      <div className="p-5">
+        {/* TAB 1: Product MetaData */}
+        {activeTab === "Product MetaData" && (
+          <div className="bg-white rounded-xl space-y-5">
+            <div className="bg-blue-50/40 border border-blue-200 rounded-xl p-4 text-xs text-blue-855 leading-relaxed select-none">
+              <p className="font-semibold text-blue-900 mb-1">Product Details</p>
+              Associate this 3D configuration with a Shopify product by entering its SKU and name.
             </div>
-          )}
-        </div>
-      )}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-655 uppercase tracking-wider mb-1 select-none">
+                  Product SKU *
+                </label>
+                <input
+                  type="text"
+                  value={designManager.sku}
+                  onChange={(e) => designManager.setSku(e.target.value)}
+                  className="w-full px-3 py-2 text-xs font-semibold border border-gray-305 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-gray-700 bg-white"
+                  placeholder="e.g., SHOE-CLASSIC-01"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-655 uppercase tracking-wider mb-1 select-none">
+                  Product Name (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={designManager.productName}
+                  onChange={(e) => designManager.setProductName(e.target.value)}
+                  className="w-full px-3 py-2 text-xs font-semibold border border-gray-305 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 bg-white"
+                  placeholder="e.g., Classic Leather Shoe"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: Design Materials */}
+        {activeTab === "Design Materials" && (
+          <div className="text-center py-12 bg-gray-50/50 border border-dashed border-gray-200 rounded-xl select-none">
+            <p className="text-sm font-semibold text-gray-600">Design Materials</p>
+            <p className="text-xs text-gray-405 mt-1">Adjust overlay templates and default customer canvas textures.</p>
+          </div>
+        )}
+
+        {/* TAB 2: Model Materials */}
+        {activeTab === "Model Materials" && (
+          <>
+            {!hasModel ? (
+              <p className="text-gray-555 text-xs font-semibold italic p-5 bg-gray-50 rounded-xl text-center border border-dashed border-gray-200 select-none">
+                Upload a 3D model on the left to see available meshes.
+              </p>
+            ) : !activeMesh ? (
+              /* Reusable Mesh Catalog List Component */
+              <MeshList
+                store={store}
+                onOpenDetail={handleOpenMeshDetail}
+              />
+            ) : (
+              /* Reusable Mesh Detail Material Editor Component */
+              <MaterialEditor
+                activeMesh={activeMesh}
+                store={store}
+                onBack={() => setActiveMesh(null)}
+              />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 });

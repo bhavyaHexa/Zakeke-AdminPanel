@@ -29,6 +29,7 @@ class ColorStoreManager {
   // Mesh state
   availableMeshes = [];
   selectedMeshes = [];
+  activeMesh = null;
 
   // Per-mesh config: meshName → { colors, textures }
   meshConfigs = {};
@@ -49,6 +50,7 @@ class ColorStoreManager {
     this.uploadError = null;
     this.availableMeshes = [];
     this.selectedMeshes = [];
+    this.activeMesh = null;
     this.meshConfigs = {};
     this.cameraConfig = null;
     if (this.design3dManager?.environmentStoreManager) {
@@ -88,11 +90,19 @@ class ColorStoreManager {
     this.availableMeshes = meshes;
   }
 
+  setActiveMesh(meshName) {
+    this.activeMesh = meshName;
+  }
+
   toggleMeshSelection(meshName) {
     if (this.selectedMeshes.includes(meshName)) {
       this.selectedMeshes = this.selectedMeshes.filter((m) => m !== meshName);
+      if (this.activeMesh === meshName) {
+        this.activeMesh = null;
+      }
     } else {
       this.selectedMeshes.push(meshName);
+      this.activeMesh = meshName;
       // Ensure a config entry exists for this mesh
       if (!this.meshConfigs[meshName]) {
         this.meshConfigs[meshName] = { colors: [], textures: [] };
@@ -194,6 +204,7 @@ class ColorStoreManager {
     this.uploadError = null;
     this.availableMeshes = [];
     this.selectedMeshes = [];
+    this.activeMesh = null;
     this.meshConfigs = {};
   }
 

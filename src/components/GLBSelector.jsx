@@ -80,56 +80,45 @@ export const GLBSelector = observer(() => {
     }
   };
 
+  const hasModel = configuratorStore.glbFile || configuratorStore.glbFileUrl;
+
+  if (hasModel) {
+    return <GLBPreview />;
+  }
+
   return (
-    <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">1. Select 3D Model</h2>
-      <div 
-        className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors ${configuratorStore.glbFile || configuratorStore.glbFileUrl ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'}`}
-        onClick={handleClick}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-      >
-        <input 
-          type="file" 
-          accept=".glb" 
-          className="hidden" 
-          ref={fileInputRef} 
-          onChange={handleFileChange}
-        />
-        <div className="flex flex-col items-center justify-center space-y-3">
-          <Upload className={`w-10 h-10 ${configuratorStore.glbFile || configuratorStore.glbFileUrl ? 'text-green-500' : 'text-gray-400'}`} />
-          {configuratorStore.glbFile || configuratorStore.glbFileUrl ? (
-            <div>
-              <p className="text-sm font-medium text-green-700">
-                File: {configuratorStore.glbFile ? configuratorStore.glbFile.name : (configuratorStore.glbFileUrl.split('/').pop() || "Loaded Model")}
-              </p>
-              {configuratorStore.glbFile && (
-                <p className="text-xs text-green-600 mt-1">{(configuratorStore.glbFile.size / 1024 / 1024).toFixed(2)} MB</p>
-              )}
-              
-              {configuratorStore.isUploading && (
-                <p className="text-xs text-blue-500 mt-2 animate-pulse font-medium">Uploading to Shopify Files...</p>
-              )}
-              {!configuratorStore.isUploading && configuratorStore.glbFileUrl && (
-                <p className="text-xs text-green-600 mt-2 font-semibold">✓ Uploaded to Shopify Files</p>
-              )}
-              {configuratorStore.uploadError && (
-                <p className="text-xs text-red-500 mt-2 font-medium">Upload Error: {configuratorStore.uploadError}</p>
-              )}
-              
-              {isParsing && <p className="text-xs text-blue-500 mt-2">Parsing meshes...</p>}
-              {!isParsing && !parseError && <p className="text-xs text-green-600 mt-2">Parsed {configuratorStore.availableMeshes.length} meshes</p>}
-              {parseError && <p className="text-xs text-red-500 mt-2">{parseError}</p>}
-            </div>
-          ) : (
-            <div>
-              <p className="text-sm font-medium text-gray-700">Click or drag .glb file here</p>
-              <p className="text-xs text-gray-500 mt-1">Only .glb files are supported</p>
-            </div>
-          )}
+    <div 
+      className="relative border-2 border-dashed border-gray-300 hover:border-blue-450 rounded-xl bg-white hover:bg-blue-50/10 p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 flex-1 h-full min-h-[300px]"
+      onClick={handleClick}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      <input 
+        type="file" 
+        accept=".glb" 
+        className="hidden" 
+        ref={fileInputRef} 
+        onChange={handleFileChange}
+      />
+      <div className="flex flex-col items-center justify-center space-y-4 max-w-sm text-center">
+        <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-2">
+          <Upload className="w-8 h-8" />
         </div>
+        <div>
+          <p className="text-base font-bold text-gray-800">Upload 3D Model</p>
+          <p className="text-sm text-gray-500 mt-1">Drag and drop your model (.glb) file here or click to browse</p>
+        </div>
+        
+        {configuratorStore.isUploading && (
+          <p className="text-xs text-blue-550 mt-2 animate-pulse font-medium">Uploading to Shopify Files...</p>
+        )}
+        {configuratorStore.uploadError && (
+          <p className="text-xs text-red-500 mt-2 font-medium">Upload Error: {configuratorStore.uploadError}</p>
+        )}
+        
+        {isParsing && <p className="text-xs text-blue-500 mt-2">Parsing meshes...</p>}
+        {parseError && <p className="text-xs text-red-500 mt-2">{parseError}</p>}
       </div>
-      <GLBPreview />
     </div>
   );
 });

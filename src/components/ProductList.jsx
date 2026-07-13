@@ -187,7 +187,12 @@ export const ProductList = observer(() => {
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">ID: {product.id}</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                      SKU: {product.sku || "N/A"}
+                    </span>
+                    <span className="text-xs text-gray-400">ID: {product.id}</span>
+                  </div>
                 </div>
 
                 {/* Actions */}
@@ -242,6 +247,21 @@ export const ProductList = observer(() => {
           })}
         </div>
       )}
+
+      {/* Add new Configuration button at the bottom */}
+      <div className="flex justify-center mt-8 pt-6 border-t border-gray-150">
+        <button
+          onClick={() => {
+            runInAction(() => {
+              designManager.setIsConfiguring(true);
+            });
+          }}
+          className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-md transition-all duration-200"
+        >
+          <span className="text-lg font-bold">+</span>
+          <span>Add new Configuration</span>
+        </button>
+      </div>
     </div>
   );
 });
