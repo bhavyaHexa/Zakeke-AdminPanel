@@ -158,7 +158,12 @@ export const ProductList = observer(() => {
             return (
               <div
                 key={product.id}
-                className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${
+                onClick={() => {
+                  if (!isEditLoading && !isDeleting) {
+                    handleEdit(product.id);
+                  }
+                }}
+                className={`flex items-center gap-4 p-4 rounded-lg border transition-colors cursor-pointer select-none ${
                   isActive
                     ? "border-blue-300 bg-blue-50"
                     : "border-gray-100 bg-gray-50 hover:bg-white hover:border-gray-200"
@@ -169,7 +174,7 @@ export const ProductList = observer(() => {
                   <img
                     src={product.thumbnail}
                     alt={product.title}
-                    className="w-12 h-12 object-cover rounded-md flex-shrink-0 border border-gray-200"
+                    className="w-12 h-12 object-cover rounded-md flex-shrink-0 border border-gray-200 pointer-events-none"
                   />
                 ) : (
                   <div className="w-12 h-12 bg-gray-200 rounded-md flex-shrink-0 flex items-center justify-center">
@@ -178,7 +183,7 @@ export const ProductList = observer(() => {
                 )}
 
                 {/* Info */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 pointer-events-none">
                   <p className="text-sm font-semibold text-gray-800 truncate">
                     {product.title}
                     {isActive && (
@@ -199,7 +204,10 @@ export const ProductList = observer(() => {
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {/* Edit */}
                   <button
-                    onClick={() => handleEdit(product.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(product.id);
+                    }}
                     disabled={isEditLoading || isDeleting}
                     title="Edit product"
                     className="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-blue-600 bg-white border border-gray-200 hover:border-blue-300 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50"
@@ -216,7 +224,10 @@ export const ProductList = observer(() => {
                   {confirmDeleteId === product.id ? (
                     <div className="flex items-center gap-1.5">
                       <button
-                        onClick={handleDeleteConfirm}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteConfirm();
+                        }}
                         disabled={isDeleting}
                         className="text-xs font-medium text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 flex items-center gap-1"
                       >
@@ -224,7 +235,10 @@ export const ProductList = observer(() => {
                         Confirm
                       </button>
                       <button
-                        onClick={() => setConfirmDeleteId(null)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDeleteId(null);
+                        }}
                         className="text-xs font-medium text-gray-600 hover:text-gray-800 bg-white border border-gray-200 px-3 py-1.5 rounded-md transition-colors"
                       >
                         Cancel
@@ -232,7 +246,10 @@ export const ProductList = observer(() => {
                     </div>
                   ) : (
                     <button
-                      onClick={() => setConfirmDeleteId(product.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteId(product.id);
+                      }}
                       disabled={isDeleting || isEditLoading}
                       title="Delete product"
                       className="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-300 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50"
