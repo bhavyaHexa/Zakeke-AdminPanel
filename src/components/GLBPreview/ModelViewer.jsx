@@ -174,23 +174,27 @@ export const ModelViewer = observer(({
           targetMat.roughnessMap = origMat.roughnessMap;
         }
 
-        // Highlight active mesh using a vibrant red color
+        // Highlight active mesh using an orange outline glow
+        let outlineMesh = child.userData.outlineMesh;
         if (child.name === configuratorStore.activeMesh) {
-          let activeHighlightMat = child.userData.activeHighlightMat;
-          if (!activeHighlightMat) {
-            activeHighlightMat = targetMat.clone();
-            child.userData.activeHighlightMat = activeHighlightMat;
-          } else {
-            activeHighlightMat.copy(targetMat);
+          if (!outlineMesh) {
+            const outlineMaterial = new THREE.MeshBasicMaterial({
+              color: 0xff5500, // Vibrant orange outline
+              side: THREE.BackSide,
+              transparent: true,
+              opacity: 0.85
+            });
+            outlineMesh = new THREE.Mesh(child.geometry, outlineMaterial);
+            outlineMesh.scale.set(1.02, 1.02, 1.02);
+            child.add(outlineMesh);
+            child.userData.outlineMesh = outlineMesh;
           }
-          activeHighlightMat.color.set(0xdc2626); // Red color
-          activeHighlightMat.emissive.set(0xef4444); // Glowing red
-          activeHighlightMat.emissiveIntensity = 0.8;
-          child.material = activeHighlightMat;
+          outlineMesh.visible = true;
+          child.material = targetMat;
         } else {
-          // Clear active emissive overlay
-          targetMat.emissive.set(0x000000);
-          targetMat.emissiveIntensity = 0;
+          if (outlineMesh) {
+            outlineMesh.visible = false;
+          }
           child.material = targetMat;
         }
       }
