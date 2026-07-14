@@ -29,7 +29,7 @@ export const ColorChangeCategory = observer(() => {
   };
 
   return (
-    <div className="flex flex-col bg-white">
+    <div className="flex flex-col bg-white h-full overflow-hidden flex-1">
       {/* Reusable Material Tabs Component */}
       <MaterialTabs
         tabs={["Product MetaData", "Model Materials", "Design Materials"]}
@@ -41,7 +41,7 @@ export const ColorChangeCategory = observer(() => {
         }}
       />
 
-      <div className="p-5">
+      <div className="p-5 overflow-y-auto flex-1">
         {/* TAB 1: Product MetaData */}
         {activeTab === "Product MetaData" && (
           <div className="bg-white rounded-xl space-y-5">

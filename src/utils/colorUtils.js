@@ -1,4 +1,4 @@
-// Utility functions for handling color/texture logic in the admin panel
+// Utility functions for handling color/texture/roughness/metalness logic in the admin panel
 
 // ── Color helpers ──────────────────────────────────────────────────────────────
 
@@ -31,3 +31,31 @@ export const updateTextureSwatchInList = (textureList, textureId, field, value) 
   const texture = textureList.find((t) => t.id === textureId);
   if (texture) texture[field] = value;
 };
+
+// ── Roughness helpers ──────────────────────────────────────────────────────────
+
+export const createNewRoughnessValue = () => ({
+  id: `r_val_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+  name: "",
+  value: 0.5,
+});
+
+export const createNewRoughnessTexture = () => ({
+  id: `r_tex_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+  name: "",
+  url: "",
+});
+
+// ── Metalness helpers ──────────────────────────────────────────────────────────
+
+export const createNewMetalnessValue = () => ({
+  id: `m_val_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+  name: "",
+  value: 0.5,
+});
+
+export const createNewMetalnessTexture = () => ({
+  id: `m_tex_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+  name: "",
+  url: "",
+});

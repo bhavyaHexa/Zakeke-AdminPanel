@@ -74,7 +74,11 @@ export const ModelViewer = observer(({
       return {
         mesh,
         hex: cfg?.colors?.[0]?.hex,
-        url: cfg?.textures?.[0]?.url
+        url: cfg?.textures?.[0]?.url,
+        metalnessValue: cfg?.metalnessValue ?? cfg?.metallic,
+        metalnessTexture: cfg?.metalnessTexture ?? cfg?.metallicGlossMapUrl,
+        roughnessValue: cfg?.roughnessValue ?? cfg?.roughness,
+        roughnessTexture: cfg?.roughnessTexture,
       };
     })
   );
@@ -90,8 +94,16 @@ export const ModelViewer = observer(({
 
         // Get config from store
         const cfg = configuratorStore.getMeshConfig(child.name);
+        
+        // Albedo configurations
         const hex = cfg?.colors?.[0]?.hex;
         const textureUrl = cfg?.textures?.[0]?.url;
+
+        // Metallic/Roughness parameters
+        const metalnessValue = cfg?.metalnessValue ?? cfg?.metallic;
+        const metalnessTexture = cfg?.metalnessTexture ?? cfg?.metallicGlossMapUrl;
+        const roughnessValue = cfg?.roughnessValue ?? cfg?.roughness;
+        const roughnessTexture = cfg?.roughnessTexture;
 
         // Clone material to apply custom changes dynamically
         let targetMat = child.userData.customMaterial;
@@ -122,20 +134,58 @@ export const ModelViewer = observer(({
           targetMat.map = origMat.map;
         }
 
+        // Apply metallic
+        if (metalnessValue !== undefined) {
+          targetMat.metalness = metalnessValue;
+        } else {
+          targetMat.metalness = origMat.metalness;
+        }
+
+        // Apply roughness
+        if (roughnessValue !== undefined) {
+          targetMat.roughness = roughnessValue;
+        } else {
+          targetMat.roughness = origMat.roughness;
+        }
+
+        // Apply metalness texture map
+        if (metalnessTexture) {
+          const textureLoader = new THREE.TextureLoader();
+          textureLoader.load(metalnessTexture, (tex) => {
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            targetMat.metalnessMap = tex;
+            targetMat.needsUpdate = true;
+          });
+        } else {
+          targetMat.metalnessMap = origMat.metalnessMap;
+        }
+
+        // Apply roughness texture map
+        if (roughnessTexture) {
+          const textureLoader = new THREE.TextureLoader();
+          textureLoader.load(roughnessTexture, (tex) => {
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            targetMat.roughnessMap = tex;
+            targetMat.needsUpdate = true;
+          });
+        } else {
+          targetMat.roughnessMap = origMat.roughnessMap;
+        }
+
         // Highlight active mesh using a vibrant red color
         if (child.name === configuratorStore.activeMesh) {
           let activeHighlightMat = child.userData.activeHighlightMat;
           if (!activeHighlightMat) {
             activeHighlightMat = targetMat.clone();
-            activeHighlightMat.color.set(0xdc2626); // Red color
-            activeHighlightMat.emissive.set(0xef4444); // Glowing red
-            activeHighlightMat.emissiveIntensity = 0.8;
             child.userData.activeHighlightMat = activeHighlightMat;
           } else {
-            activeHighlightMat.color.set(0xdc2626);
-            activeHighlightMat.emissive.set(0xef4444);
-            activeHighlightMat.emissiveIntensity = 0.8;
+            activeHighlightMat.copy(targetMat);
           }
+          activeHighlightMat.color.set(0xdc2626); // Red color
+          activeHighlightMat.emissive.set(0xef4444); // Glowing red
+          activeHighlightMat.emissiveIntensity = 0.8;
           child.material = activeHighlightMat;
         } else {
           // Clear active emissive overlay

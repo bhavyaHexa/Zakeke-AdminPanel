@@ -198,7 +198,7 @@ const App = observer(() => {
           )}
 
           {/* Section 2: Customizable Areas */}
-          <div className="shadow-sm border border-gray-100 rounded-xl overflow-hidden flex-1">
+          <div className="shadow-sm border border-gray-100 rounded-xl flex-1 flex flex-col overflow-hidden">
             <ColorChangeCategory />
           </div>
         </div>
