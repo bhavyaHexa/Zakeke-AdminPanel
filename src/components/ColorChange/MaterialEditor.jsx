@@ -12,10 +12,12 @@ export const MaterialEditor = observer(({ activeMesh, store, onBack }) => {
   // Accordion states
   const [isAlbedoOpen, setIsAlbedoOpen] = useState(true);
   const [isMetallicOpen, setIsMetallicOpen] = useState(false);
+  const [isNormalOpen, setIsNormalOpen] = useState(false);
 
   const albedoFileInputRef = useRef(null);
   const metallicFileInputRef = useRef(null);
   const roughnessFileInputRef = useRef(null);
+  const normalFileInputRef = useRef(null);
   const activeAlbedoUploadIdRef = useRef(null);
 
   useEffect(() => {
@@ -31,6 +33,8 @@ export const MaterialEditor = observer(({ activeMesh, store, onBack }) => {
   const roughnessValue = currentCfg?.roughnessValue ?? currentCfg?.roughness ?? 0.5;
   const metalnessTexture = currentCfg?.metalnessTexture ?? currentCfg?.metallicGlossMapUrl ?? "";
   const roughnessTexture = currentCfg?.roughnessTexture || "";
+  const normalIntensity = currentCfg?.normalIntensity ?? 1.0;
+  const normalMap = currentCfg?.normalMap || "";
 
   // Preview swatch variables
   const colorVal = colors[0]?.hex || "#0A0A0A";
@@ -144,6 +148,34 @@ export const MaterialEditor = observer(({ activeMesh, store, onBack }) => {
 
   const handleRemoveRoughnessTexture = () => {
     store.updateMeshRoughnessTexture(activeMesh, "");
+  };
+
+  const handleNormalIntensityChange = (val) => {
+    store.updateMeshNormalIntensity(activeMesh, val);
+  };
+
+  const handleNormalMapUpload = async (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setIsUploading(true);
+      try {
+        const res = await uploadFile(file);
+        const url = res.url || res.data?.url;
+        if (url) {
+          store.updateMeshNormalMap(activeMesh, url);
+        }
+      } catch (err) {
+        console.error("Normal map upload failed:", err);
+        alert(`Failed to upload file: ${err.message}`);
+      } finally {
+        setIsUploading(false);
+        e.target.value = "";
+      }
+    }
+  };
+
+  const handleRemoveNormalMap = () => {
+    store.updateMeshNormalMap(activeMesh, "");
   };
 
   return (
@@ -434,6 +466,73 @@ export const MaterialEditor = observer(({ activeMesh, store, onBack }) => {
             </div>
           </MaterialAccordion>
 
+          {/* ── NORMAL MAP ACCORDION ────────────────────────────────────────── */}
+          <MaterialAccordion
+            title="Normal Map"
+            isOpen={isNormalOpen}
+            onToggle={() => setIsNormalOpen((prev) => !prev)}
+          >
+            <div className="space-y-4 py-1">
+              
+              {/* Normal Intensity Slider Row */}
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-xs font-bold text-gray-550 w-24">Intensity</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.05"
+                  value={normalIntensity}
+                  onChange={(e) => handleNormalIntensityChange(parseFloat(e.target.value))}
+                  className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  max="2"
+                  step="0.05"
+                  value={normalIntensity}
+                  onChange={(e) => handleNormalIntensityChange(parseFloat(e.target.value))}
+                  className="w-16 border border-gray-300 rounded px-2 py-1 text-center text-xs font-semibold focus:outline-none text-gray-700 bg-white"
+                />
+              </div>
+
+              {/* Normal Map Texture Row */}
+              <div className="flex items-center justify-between gap-4 pt-1">
+                <span className="text-xs font-bold text-gray-550 w-24">Texture</span>
+                <div className="flex-1 flex justify-end">
+                  {normalMap ? (
+                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-1 pr-2">
+                      <div className="w-6 h-6 rounded overflow-hidden border border-gray-300 flex-shrink-0 bg-gray-100 flex items-center justify-center">
+                        <img src={normalMap} className="w-full h-full object-cover" alt="normal map" />
+                      </div>
+                      <button
+                        onClick={() => normalFileInputRef.current?.click()}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-bold transition focus:outline-none"
+                      >
+                        Change
+                      </button>
+                      <button
+                        onClick={handleRemoveNormalMap}
+                        className="text-xs text-red-500 hover:text-red-700 font-bold transition focus:outline-none"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => normalFileInputRef.current?.click()}
+                      className="text-[#ff6a00] hover:text-[#e05d00] font-bold text-xs transition focus:outline-none"
+                    >
+                      Upload
+                    </button>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          </MaterialAccordion>
+
         </div>
       </div>
 
@@ -456,6 +555,13 @@ export const MaterialEditor = observer(({ activeMesh, store, onBack }) => {
         type="file"
         ref={roughnessFileInputRef}
         onChange={handleRoughnessTextureUpload}
+        accept="image/*"
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={normalFileInputRef}
+        onChange={handleNormalMapUpload}
         accept="image/*"
         className="hidden"
       />

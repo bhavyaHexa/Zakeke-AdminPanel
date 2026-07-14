@@ -134,6 +134,8 @@ class ColorStoreManager {
         metalnessTexture: "",
         roughnessValue: 0.5,
         roughnessTexture: "",
+        normalIntensity: 1.0,
+        normalMap: "",
         // legacy compatibility
         metallic: 0.0,
         roughness: 0.5,
@@ -224,6 +226,16 @@ class ColorStoreManager {
     this.updateMeshMetalnessTexture(meshName, url);
   }
 
+  updateMeshNormalIntensity(meshName, value) {
+    this._ensureMeshConfig(meshName);
+    this.meshConfigs[meshName].normalIntensity = value;
+  }
+
+  updateMeshNormalMap(meshName, url) {
+    this._ensureMeshConfig(meshName);
+    this.meshConfigs[meshName].normalMap = url;
+  }
+
   // ── Serialise to payload ───────────────────────────────────────────────────
 
   get meshPayload() {
@@ -235,6 +247,8 @@ class ColorStoreManager {
         metalnessTexture: "",
         roughnessValue: 0.5,
         roughnessTexture: "",
+        normalIntensity: 1.0,
+        normalMap: "",
         metallic: 0.0,
         roughness: 0.5,
         metallicGlossMapUrl: "",
@@ -247,6 +261,8 @@ class ColorStoreManager {
         metalnessTexture: cfg.metalnessTexture ?? cfg.metallicGlossMapUrl ?? "",
         roughnessValue: cfg.roughnessValue ?? cfg.roughness ?? 0.5,
         roughnessTexture: cfg.roughnessTexture || "",
+        normalIntensity: cfg.normalIntensity ?? 1.0,
+        normalMap: cfg.normalMap || "",
         // legacy compatibility
         metallic: cfg.metalnessValue ?? cfg.metallic ?? 0.0,
         roughness: cfg.roughnessValue ?? cfg.roughness ?? 0.5,
@@ -294,6 +310,8 @@ class ColorStoreManager {
         metalnessTexture: meshEntry.metalnessTexture ?? meshEntry.metallicGlossMapUrl ?? "",
         roughnessValue: meshEntry.roughnessValue ?? meshEntry.roughness ?? 0.5,
         roughnessTexture: meshEntry.roughnessTexture || "",
+        normalIntensity: meshEntry.normalIntensity ?? 1.0,
+        normalMap: meshEntry.normalMap || "",
         // legacy compatibility
         metallic: meshEntry.metalnessValue ?? meshEntry.metallic ?? 0.0,
         roughness: meshEntry.roughnessValue ?? meshEntry.roughness ?? 0.5,
@@ -311,6 +329,8 @@ class ColorStoreManager {
           metalnessTexture: "",
           roughnessValue: 0.5,
           roughnessTexture: "",
+          normalIntensity: 1.0,
+          normalMap: "",
           // legacy compatibility
           metallic: 0.0,
           roughness: 0.5,

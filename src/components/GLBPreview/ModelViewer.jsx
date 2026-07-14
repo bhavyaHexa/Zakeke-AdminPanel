@@ -79,6 +79,8 @@ export const ModelViewer = observer(({
         metalnessTexture: cfg?.metalnessTexture ?? cfg?.metallicGlossMapUrl,
         roughnessValue: cfg?.roughnessValue ?? cfg?.roughness,
         roughnessTexture: cfg?.roughnessTexture,
+        normalIntensity: cfg?.normalIntensity,
+        normalMap: cfg?.normalMap,
       };
     })
   );
@@ -104,6 +106,10 @@ export const ModelViewer = observer(({
         const metalnessTexture = cfg?.metalnessTexture ?? cfg?.metallicGlossMapUrl;
         const roughnessValue = cfg?.roughnessValue ?? cfg?.roughness;
         const roughnessTexture = cfg?.roughnessTexture;
+
+        // Normal map parameters
+        const normalIntensity = cfg?.normalIntensity ?? 1.0;
+        const normalMap = cfg?.normalMap;
 
         // Clone material to apply custom changes dynamically
         let targetMat = child.userData.customMaterial;
@@ -172,6 +178,25 @@ export const ModelViewer = observer(({
           });
         } else {
           targetMat.roughnessMap = origMat.roughnessMap;
+        }
+
+        // Apply normal texture map and scale/intensity
+        if (normalMap) {
+          const textureLoader = new THREE.TextureLoader();
+          textureLoader.load(normalMap, (tex) => {
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            targetMat.normalMap = tex;
+            targetMat.normalScale.set(normalIntensity, normalIntensity);
+            targetMat.needsUpdate = true;
+          });
+        } else {
+          targetMat.normalMap = origMat.normalMap;
+          if (origMat.normalScale) {
+            targetMat.normalScale.copy(origMat.normalScale);
+          } else {
+            targetMat.normalScale.set(1.0, 1.0);
+          }
         }
 
         // Highlight active mesh using an orange outline glow
