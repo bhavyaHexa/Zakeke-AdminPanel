@@ -147,9 +147,9 @@ export const MaterialEditor = observer(({ activeMesh, store, onBack }) => {
   };
 
   return (
-    <div className="space-y-4 font-sans select-none">
+    <div className="space-y-4 font-sans select-none flex flex-col h-full overflow-hidden flex-1">
       {/* Back button and Header */}
-      <div className="flex items-center space-x-3 mb-2">
+      <div className="flex items-center space-x-3 mb-2 flex-shrink-0">
         <button
           onClick={onBack}
           className="p-1 hover:bg-gray-155 rounded-lg text-gray-555 transition flex items-center justify-center flex-shrink-0 focus:outline-none"
@@ -171,7 +171,7 @@ export const MaterialEditor = observer(({ activeMesh, store, onBack }) => {
       </div>
 
       {/* Editor Body */}
-      <div className="space-y-4 border-t border-gray-100 pt-4">
+      <div className="space-y-4 border-t border-gray-100 pt-4 flex-1 overflow-y-auto pr-1">
         {/* Name field */}
         <div>
           <label className="block text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-1 select-none">

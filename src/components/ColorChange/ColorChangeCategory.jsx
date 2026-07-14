@@ -41,7 +41,7 @@ export const ColorChangeCategory = observer(() => {
         }}
       />
 
-      <div className="p-5 overflow-y-auto flex-1">
+      <div className="p-5 flex-1 flex flex-col overflow-hidden">
         {/* TAB 1: Product MetaData */}
         {activeTab === "Product MetaData" && (
           <div className="bg-white rounded-xl space-y-5">
